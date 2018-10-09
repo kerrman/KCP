@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import api.TCPserverInterface;
+
 /**
  * @author Chris
  *
@@ -15,11 +17,11 @@ public class TCPServer implements Runnable {
 	private static volatile ServerSocket server = null;
 	private static volatile Thread thread = null;
 	private static volatile int port = 9000;
-	protected TCPinterface controller;
+	protected TCPserverInterface controller;
 	private static volatile List<ConnectionHandler> clients;
 	protected final static int ALL = -1, SERVER = -2, FINDFAIL = -10;
 
-	public TCPServer(TCPinterface _controller) {
+	public TCPServer(TCPserverInterface _controller) {
 		this.controller = _controller;
 		clients = new ArrayList<ConnectionHandler>();
 	}
@@ -111,7 +113,7 @@ public class TCPServer implements Runnable {
 			if (clients.get(i).getID() == ID) {
 				if (clients.get(i).isControlNode()) {
 					return true;
-				}else
+				} else
 					return false;
 			}
 		return false;
@@ -151,16 +153,13 @@ public class TCPServer implements Runnable {
 	/**
 	 * <code>TCPServer.getControlNodes(int <code>retType</code>)</code>
 	 * 
-	 * @param retType
-	 *            is used to tell command what type of info to return from current Clients connected if they are a control node.
-	 * @return Depending on retType, either ID, Index, or Handle value of all the Clients that are a Control Node are returned.
+	 * @note NOT IMPLEMENTED YET
+	 * @param 
+	 * @return ID of all the Clients that are a Control Node are returned.
 	 * 
 	 */
 	public int[] getControlNodes() {
-		int[] IDs = new int[clients.size()];
-		for (int i = 0; i < clients.size(); i++)
-			IDs[i] = clients.get(i).getID();
-		return IDs;
+		return null;
 	}
 
 	/**
@@ -341,20 +340,20 @@ public class TCPServer implements Runnable {
 	}
 
 	private synchronized void printClient(String text) {
-		controller.printClient("TCP Server:" + text + "\r\n");
+		controller.printTCPclient("TCP Server:" + text + "\r\n");
 	}
 
 	synchronized void printServer(String text) {
-		controller.printServer("TCP Server:" + text + "\r\n");
+		controller.printTCPserver("TCP Server:" + text + "\r\n");
 	}
 
 	private synchronized void writeLog(String Text) {
-		controller.logWrite("TCP Server:" + Text + "\r\n");
+		controller.writeTCPlog("TCP Server:" + Text + "\r\n");
 	}
 
 	protected synchronized void update() {
 		String[] clientHandles = getClientHandles();
 		String[] serverNodes = getServerNodes();
-		controller.update(clientHandles, serverNodes);
+		controller.updateTCPWho(clientHandles, serverNodes);
 	}
 }

@@ -63,16 +63,17 @@ public class SecureTCPsocket {
 	public void testSpeed() throws IOException {
 		//TODO SPEED test needs to be worked on
         long total = 0;
+        byte[] bytes = new byte[32*1024]; // 32K
         long start = System.currentTimeMillis();
 
-        byte[] bytes = new byte[32*1024]; // 32K
         for(int i=1;;i++) {
             int read = socket_raw_in.read(bytes);
             if (read < 0) break;
             total += read;
             if (i % 500000 == 0) {
                 long cost = System.currentTimeMillis() - start;
-                System.out.printf("Read %,d bytes, speed: %,d MB/s%n", total, total/cost/1000);
+                long speed = total/cost/1000;
+                System.out.printf("Read %,d bytes, speed: %,d MB/s%n", total, speed);
             }
         }
     }

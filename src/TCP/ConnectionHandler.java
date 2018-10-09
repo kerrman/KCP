@@ -11,47 +11,49 @@ import java.util.logging.Logger;
 public class ConnectionHandler implements Runnable {
 
 	private SecureTCPsocket socket = null;
-    private volatile int ID = -1;
-    private final TCPServer localServer;
-    private volatile String handle = null;
-    private volatile Thread thread;
+	private volatile int ID = -1;
+	private final TCPServer localServer;
+	private volatile String handle = null;
+	private volatile Thread thread;
+	protected static final String goodBye = "Bye.",socketTimeOut="";
 
-    public ConnectionHandler(TCPServer _tcpMan, SecureTCPsocket _encryptedSocket) {
-        localServer = _tcpMan;
-        socket = _encryptedSocket;
-        ID = socket.getPort();
-    }
+	public ConnectionHandler(TCPServer _tcpMan, SecureTCPsocket _encryptedSocket) {
+		localServer = _tcpMan;
+		socket = _encryptedSocket;
+		ID = socket.getPort();
+	}
 
 	public void start() throws IOException {
-    	socket.open();
+		socket.open();
 		if (thread == null) {
 			thread = new Thread(this);
 			thread.start();
 		}
 	}
 
-    public String getHandle() {
-        return handle;
-    }
+	public String getHandle() {
+		return handle;
+	}
 
-    public boolean send(String msg) {
-        // System.out.println(msg);
-        if (socket.send(msg)) {
-            return true;
-        } else {
-            localServer.remove(ID);
-            return false;
-        }
-    }
-    private String receiveTransmission() {
-		String temp = "Bye.";
+	public boolean send(String msg) {
+		// System.out.println(msg);
+		if (socket.send(msg)) {
+			return true;
+		} else {
+			localServer.remove(ID);
+			return false;
+		}
+	}
+
+	private String receiveTransmission() {
+		String temp = goodBye;
 		if (socket != null) {
 			try {
 				temp = socket.receiveTransmission();
 			} catch (IOException e) {
 				temp = e.toString();
 				if (temp.indexOf("java.net.SocketTimeoutException") >= 0) {
-					temp = "";
+					temp = socketTimeOut;
 				} else {
 					localServer.remove(ID);
 					stop();
@@ -65,18 +67,18 @@ public class ConnectionHandler implements Runnable {
 		return temp;
 	}
 
+	public int getID() {
+		return ID;
+	}
 
-    public int getID() {
-        return ID;
-    }
+	public boolean logon() {
+		throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+																		// Tools | Templates.
+	}
 
-    public boolean logon() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    public void stop() {
-    	socket.close();
-        localServer.remove(ID);
+	public void stop() {
+		socket.close();
+		localServer.remove(ID);
 		if (thread != null) {
 			try {
 				thread.join();
@@ -85,25 +87,29 @@ public class ConnectionHandler implements Runnable {
 			}
 			thread = null;
 		}
-    }
-    
-    public void run() {
+	}
+
+	public void run() {
 		localServer.printServer("Socket: " + getWho() + "  started.");
 		while (thread != null) {
-				String input = receiveTransmission();
+			String input = receiveTransmission();
 
-				if (input == null) {
-					input = "Bye.";
-				}
-				if (input.indexOf("COM:") == 0) {
-					processCommand(input.substring(4));
-				} else if (input.equalsIgnoreCase("")) {
-				}
+			if (input == null) {
+				input = goodBye;
+				stop();
+			} else if (input.indexOf(goodBye) == 0) {
+			} else if (input.indexOf("COM:") == 0) {
+				processCommand(input.substring(4));
+			} else if (input.equalsIgnoreCase(socketTimeOut)) {
+				// Socket timed out - move on - time out is short so connection handler doesn't
+				// freeze up
 			}
+		}
 		localServer.remove(ID);
 	}
 
 	private void processCommand(String recievedCommand) {
+		// TODO process command in TCP needs to be built
 		int endType = recievedCommand.indexOf(':') + 1;
 		int endString = recievedCommand.length() - 1;
 		String command = recievedCommand.substring(0, endType - 1);
@@ -120,16 +126,10 @@ public class ConnectionHandler implements Runnable {
 			info[i] = commandData.substring(0, endInfo);
 			commandData = commandData.substring(endInfo + 1, endString);
 		}
-		else if (localServer.findClientHandle(command) >= 0) {
-			for (int i = 0; i < info.length; i++) {
-				localServer.handleClient(command, info[i], this.handle);
-				System.out.println(this.handle + " to: " + command + info[i]);
-			}
-		} 
 	}
 
 	public String getWho() {
-		return handle+" ("+ID+")";
+		return handle + " (" + ID + ")";
 	}
 
 	public boolean isControlNode() {
@@ -139,8 +139,7 @@ public class ConnectionHandler implements Runnable {
 
 	public void sendCommand(int senderID, String _command) {
 		// TODO sendCommand(String senderInfo, String _command) needs to be built
-		
-	}
 
+	}
 
 }

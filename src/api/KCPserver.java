@@ -1,9 +1,6 @@
 package api;
 
-import TCP.TCPinterface;
-import udp.UDPinterface;
-
-abstract public class KCPserver implements TCPinterface, UDPinterface{
+abstract public class KCPserver implements TCPserverInterface, UDPserverInterface{
 
 	public KCPserver() {
 	}
